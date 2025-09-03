@@ -1,0 +1,21 @@
+<resources>
+    <string name="app_name">Translator</string>
+    <string name="translate_screen">Перевод</string>
+    <string name="favorites">Избранное</string>
+    <string name="history">История</string>
+    <string name="word_for_translate">Слово на английском</string>
+    <string name="translation">Здесь будет перевод</string>
+    <string name="translate">Перевести</string>
+    <string name="delete_from_history">Удалить из истории</string>
+    <string name="add_to_favorites">Добавить в избранное</string>
+    <string name="delete_from_favorites">Удалить из избранного</string>
+    <string name="error">Ошибка</string>
+    <string name="history_not_load">История не загрузилась</string>
+    <string name="favorites_not_load">Избранное не загрузилось</string>
+    <string name="translate_not_found">Найти перевод не удалось</string>
+    <string name="translate_not_received">Получить перевод не удалось</string>
+    <string name="not_save_to_history">Не удалось сохранить в историю</string>
+    <string name="not_delete_from_history">Не удалось удалить из истории</string>
+    <string name="not_save_to_favorites">Не удалось сохранить в избранное</string>
+    <string name="not_delete_from_favorites">Не удалось удалить из избранного</string>
+</resources>

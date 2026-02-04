@@ -32,6 +32,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.translator.R
 import com.example.translator.domain.models.TranslationFavoritesEntity
 import com.example.translator.ui.viewmodels.TranslateViewModel
@@ -41,10 +42,12 @@ fun TranslateScreen(
     translateViewModel: TranslateViewModel,
 ) {
 
-    if(translateViewModel.uiState.error != null){
+    val uiState by translateViewModel.uiState.collectAsStateWithLifecycle()
+
+    if(uiState.error != null){
         Toast.makeText(LocalContext.current,
             "${stringResource(R.string.error)}: " +
-                    "${translateViewModel.uiState.error}", Toast.LENGTH_SHORT ).show()
+                    "${uiState.error}", Toast.LENGTH_SHORT ).show()
         translateViewModel.clearError()
     }
 
@@ -80,7 +83,7 @@ fun TranslateScreen(
                 modifier = Modifier.weight(1f),
                 fontSize = 16.sp,
 
-                text = translateViewModel.uiState.translate?.russianWord
+                text = uiState.translate?.russianWord
                     ?: stringResource(R.string.translation)
             )
         }
@@ -91,9 +94,9 @@ fun TranslateScreen(
             onClick = { if(word.isNotEmpty()) translateViewModel.getMeanings(word) },
             shape = RoundedCornerShape(15.dp),
             modifier = Modifier.align(Alignment.CenterHorizontally),
-            enabled = !translateViewModel.uiState.isLoading
+            enabled = !uiState.isLoading
         ) {
-            if (translateViewModel.uiState.isLoading) {
+            if (uiState.isLoading) {
                 CircularProgressIndicator(
                     modifier = Modifier
                         .size(24.dp),
@@ -123,11 +126,11 @@ fun TranslateScreen(
             modifier = Modifier.fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            itemsIndexed(translateViewModel.uiState.history){ index, item ->
+            itemsIndexed(uiState.history){ index, item ->
                 ListItem(
                     item = item,
                     index = index,
-                    isFavorite = translateViewModel.uiState.favorites.any { it.id == item.id },
+                    isFavorite = uiState.favorites.any { it.id == item.id },
                     onDeleteFromHistory = {
                         translateViewModel.deleteTranslationFromHistory(item.id)
                     },

@@ -1,9 +1,6 @@
 package com.example.translator.ui.viewmodels
 
 import android.util.Log
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.translator.R
@@ -12,7 +9,11 @@ import com.example.translator.domain.useCases.DeleteTranslationFromFavoritesById
 import com.example.translator.domain.useCases.GetAllFavoritesUseCase
 import com.example.translator.ui.resources.ResourceProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -29,8 +30,9 @@ class FavoritesViewModel @Inject constructor (
     private val resourceProvider: ResourceProvider
 ) : ViewModel(){
 
-    var uiState by mutableStateOf(FavoritesUiState())
-        private set
+
+    private val _uiState = MutableStateFlow(FavoritesUiState())
+    val uiState: StateFlow<FavoritesUiState> = _uiState.asStateFlow()
 
     init {
         observeFavorites()
@@ -38,7 +40,7 @@ class FavoritesViewModel @Inject constructor (
 
 
     fun clearError() {
-        uiState = uiState.copy(error = null)
+        _uiState.update { it.copy(error = null) }
     }
 
 
@@ -46,29 +48,28 @@ class FavoritesViewModel @Inject constructor (
         viewModelScope.launch {
             getAllFavoritesUseCase()
                 .catch { e ->
-                    uiState = uiState.copy(error = e.message)
+                    _uiState.update { it.copy(error = e.message) }
                     Log.d("R", "Избранное не загрузилось ${e.message}")
                 }
                 .collect { favorites ->
-                    uiState = uiState.copy(favorites = favorites)
+                    _uiState.update { it.copy(favorites = favorites) }
                 }
         }
     }
 
     fun deleteTranslationFromFavorites(id: Int) {
         viewModelScope.launch {
-            uiState = uiState.copy(isLoading = true)
+            _uiState.update { it.copy(isLoading = true) }
             kotlin.runCatching { deleteTranslationFromFavoritesByIdUseCase(id) }
                 .onSuccess {
-                    uiState = uiState.copy(isLoading = false)
+                    _uiState.update { it.copy(isLoading = false) }
                     Log.d("R", "Запись с id=$id удалена из избранного")
                 }
-                .onFailure {
-                    uiState = uiState.copy(
-                        isLoading = false,
-                        error = "${resourceProvider.getString
-                            (R.string.not_delete_from_favorites)}\n${it.message}")
-                    Log.d("R", "Не удалось удалить из избранного\n${it.message}")
+                .onFailure { e ->
+                    _uiState.update { it.copy(isLoading = false, error = "${resourceProvider.getString
+                        (R.string.not_delete_from_favorites)}\n${e.message}") }
+
+                    Log.d("R", "Не удалось удалить из избранного\n${e.message}")
                 }
         }
     }

@@ -130,7 +130,6 @@ fun TranslateScreen(
                     item = item,
                     index = index,
                     fromHistory = true,
-                    isFavorite = uiState.favorites.any { it.id == item.id },
                     onDeleteFromHistory = {
                         translateViewModel.deleteTranslationFromHistory(item.id)
                     },

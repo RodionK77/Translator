@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -45,8 +46,7 @@ class TranslateViewModel @Inject constructor (
     val uiState: StateFlow<TranslateUiState> = _uiState.asStateFlow()
 
     init {
-        observeHistory()
-        observeFavorites()
+        observeData()
     }
 
 
@@ -57,36 +57,34 @@ class TranslateViewModel @Inject constructor (
         _uiState.update { it.copy(translate = null) }
     }
 
-    private fun observeHistory() {
+    private fun observeData() {
         viewModelScope.launch {
-            getAllHistoryUseCase()
-                .catch { e ->
-                    _uiState.update {
-                        it.copy(
-                            error = UiText.DynamicString(e.message ?: "")
-                        )
-                    }
-                    Log.d("R", "История не загрузилась ${e.message}")
-                }
-                .collect { history ->
-                    _uiState.update { it.copy(history = history) }
-                }
-        }
-    }
+            val historyFlow = getAllHistoryUseCase()
+            val favoritesFlow = getAllFavoritesUseCase()
 
-    private fun observeFavorites() {
-        viewModelScope.launch {
-            getAllFavoritesUseCase()
+            combine(historyFlow, favoritesFlow) { history, favorites ->
+
+                val favoriteWordsSet = favorites.map { it.id }.toSet()
+
+                val historyWithFavorites = history.map { historyItem ->
+                    historyItem.copy(
+                        isFavorite = favoriteWordsSet.contains(historyItem.id)
+                    )
+                }
+
+                Pair(historyWithFavorites, favorites)
+            }
                 .catch { e ->
+                    _uiState.update { it.copy(error = UiText.DynamicString(e.message ?: "")) }
+                    Log.d("R", "История и избранное не загрузилась ${e.message}")
+                }
+                .collect { (updatedHistory, favorites) ->
                     _uiState.update {
                         it.copy(
-                            error = UiText.DynamicString(e.message ?: "")
+                            history = updatedHistory,
+                            favorites = favorites
                         )
                     }
-                    Log.d("R", "Избранное не загрузилось ${e.message}")
-                }
-                .collect { favorites ->
-                    _uiState.update { it.copy(favorites = favorites) }
                 }
         }
     }

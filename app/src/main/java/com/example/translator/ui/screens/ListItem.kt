@@ -34,7 +34,6 @@ fun ListItem(
     item: WordItem,
     index: Int,
     fromHistory: Boolean,
-    isFavorite: Boolean,
     onDeleteFromHistory: (() -> Unit)? = null,
     onAddToFavorites: (() -> Unit)? = null,
     onDeleteFromFavorites: () -> Unit
@@ -81,10 +80,10 @@ fun ListItem(
                 text = "${item.text} ➞ ${item.translation}",
                 modifier = Modifier.weight(1f),
                 fontWeight =
-                if(isFavorite && !fromHistory) FontWeight.Bold else FontWeight.Normal
+                if(item.isFavorite && !fromHistory) FontWeight.Bold else FontWeight.Normal
             )
 
-            if (isFavorite && fromHistory) {
+            if (item.isFavorite && fromHistory) {
                 Icon(
                     imageVector = Icons.Default.Favorite,
                     contentDescription = stringResource(R.string.favorites),
@@ -110,11 +109,11 @@ fun ListItem(
             }
             DropdownMenuItem(
                 text = {
-                    if(isFavorite) Text(stringResource(R.string.delete_from_favorites))
+                    if(item.isFavorite) Text(stringResource(R.string.delete_from_favorites))
                     else Text(stringResource(R.string.add_to_favorites))
                 },
                 onClick = {
-                    if(isFavorite) onDeleteFromFavorites() else if (onAddToFavorites != null) {
+                    if(item.isFavorite) onDeleteFromFavorites() else if (onAddToFavorites != null) {
                         onAddToFavorites()
                     }
                     showMenu = false

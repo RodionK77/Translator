@@ -1,7 +1,6 @@
 package com.example.translator.data
 
-import com.example.translator.domain.models.Meanings
-import com.example.translator.domain.models.Response
+import com.example.translator.data.dto.Response
 import retrofit2.http.GET
 import retrofit2.http.Query
 

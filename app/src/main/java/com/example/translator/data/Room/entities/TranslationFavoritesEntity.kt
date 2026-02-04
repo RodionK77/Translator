@@ -1,4 +1,4 @@
-package com.example.translator.domain.models
+package com.example.translator.data.Room.entities
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity

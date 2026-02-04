@@ -1,7 +1,6 @@
 package com.example.translator.domain
 
-import com.example.translator.domain.models.TranslationFavoritesEntity
-import com.example.translator.domain.models.TranslationHistoryEntity
+import com.example.translator.domain.models.WordItem
 import kotlinx.coroutines.flow.Flow
 
 interface TranslationsRepository {
@@ -9,14 +8,14 @@ interface TranslationsRepository {
 
     suspend fun deleteTranslationFromHistoryById(id: Int)
 
-    fun getAllHistory(): Flow<List<TranslationHistoryEntity>>
+    fun getAllHistory(): Flow<List<WordItem>>
 
-    suspend fun saveTranslationToHistory(item: TranslationHistoryEntity)
+    suspend fun saveTranslationToHistory(item: WordItem)
 
     suspend fun deleteTranslationFromFavoritesById(id: Int)
 
-    fun getAllFavorites(): Flow<List<TranslationFavoritesEntity>>
+    fun getAllFavorites(): Flow<List<WordItem>>
 
-    suspend fun saveTranslationToFavorites(item: TranslationFavoritesEntity)
+    suspend fun saveTranslationToFavorites(item: WordItem)
 
 }

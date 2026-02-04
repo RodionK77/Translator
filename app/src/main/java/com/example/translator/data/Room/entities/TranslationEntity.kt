@@ -1,4 +1,4 @@
-package com.example.translator.domain.models
+package com.example.translator.data.Room.entities
 
 interface TranslationEntity {
     val id: Int

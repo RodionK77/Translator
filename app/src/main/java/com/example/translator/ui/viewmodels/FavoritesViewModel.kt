@@ -4,7 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.translator.R
-import com.example.translator.domain.models.TranslationFavoritesEntity
+import com.example.translator.domain.models.WordItem
 import com.example.translator.domain.useCases.DeleteTranslationFromFavoritesByIdUseCase
 import com.example.translator.domain.useCases.GetAllFavoritesUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -19,7 +19,7 @@ import javax.inject.Inject
 data class FavoritesUiState(
     val isLoading: Boolean = false,
     val error: UiText? = null,
-    val favorites: List<TranslationFavoritesEntity> = emptyList()
+    val favorites: List<WordItem> = emptyList()
 )
 
 @HiltViewModel

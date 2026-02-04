@@ -4,9 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.translator.R
-import com.example.translator.domain.models.Meanings
-import com.example.translator.domain.models.TranslationFavoritesEntity
-import com.example.translator.domain.models.TranslationHistoryEntity
+import com.example.translator.domain.models.WordItem
 import com.example.translator.domain.useCases.DeleteTranslationFromFavoritesByIdUseCase
 import com.example.translator.domain.useCases.DeleteTranslationFromHistoryByIdUseCase
 import com.example.translator.domain.useCases.GetAllFavoritesUseCase
@@ -24,12 +22,11 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class TranslateUiState(
-    val meanings: List<Meanings> = listOf(),
     val isLoading: Boolean = false,
     val error: UiText? = null,
-    val translate: TranslationHistoryEntity? = null,
-    val history: List<TranslationHistoryEntity> = emptyList(),
-    val favorites: List<TranslationFavoritesEntity> = emptyList()
+    val translate: WordItem? = null,
+    val history: List<WordItem> = emptyList(),
+    val favorites: List<WordItem> = emptyList()
 )
 
 @HiltViewModel
@@ -57,7 +54,8 @@ class TranslateViewModel @Inject constructor (
         _uiState.update { it.copy(error = null) }
     }
     fun clearTranslate() {
-        _uiState.update { it.copy(translate = null) }    }
+        _uiState.update { it.copy(translate = null) }
+    }
 
     private fun observeHistory() {
         viewModelScope.launch {
@@ -97,16 +95,14 @@ class TranslateViewModel @Inject constructor (
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
             kotlin.runCatching { getMeaningsUseCase(search) }
-                .onSuccess { meaning ->
-                    if(meaning.isNotEmpty()){
-                        val entity = TranslationHistoryEntity(
-                            englishWord = search,
-                            russianWord = meaning[0].meanings[0].translation?.text?:"")
+                .onSuccess { meanings ->
+                    if(meanings.isNotEmpty()){
+                        val meaning = meanings.first()
 
-                        _uiState.update { it.copy(isLoading = false, translate = entity) }
+                        _uiState.update { it.copy(isLoading = false, translate = meaning) }
 
-                        Log.d("R", "Перевод: ${meaning[0].meanings[0].translation?.text}")
-                        saveTranslationToHistory(entity)
+                        Log.d("R", "Перевод: ${meaning.translation}")
+                        saveTranslationToHistory(meaning)
                     } else {
                         _uiState.update { it.copy(isLoading = false, error = UiText.StringResource(R.string.translate_not_found)) }
                         Log.d("R", "Перевод найти не удалось")
@@ -125,8 +121,8 @@ class TranslateViewModel @Inject constructor (
         }
     }
 
-    private suspend fun saveTranslationToHistory(entity: TranslationHistoryEntity){
-        kotlin.runCatching { saveTranslationToHistoryUseCase(entity) }
+    private suspend fun saveTranslationToHistory(item: WordItem){
+        kotlin.runCatching { saveTranslationToHistoryUseCase(item) }
             .onSuccess {
                 Log.d("R", "Перевод сохранен в историю")
             }
@@ -164,9 +160,9 @@ class TranslateViewModel @Inject constructor (
         }
     }
 
-    fun saveTranslationToFavorites(translate: TranslationFavoritesEntity){
+    fun saveTranslationToFavorites(item: WordItem){
         viewModelScope.launch {
-            kotlin.runCatching { saveTranslationToFavoritesUseCase(translate) }
+            kotlin.runCatching { saveTranslationToFavoritesUseCase(item) }
                 .onSuccess {
                     _uiState.update { it.copy(isLoading = false) }
                     Log.d("R", "Перевод сохранен в избранное")

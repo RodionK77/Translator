@@ -4,8 +4,8 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import com.example.translator.domain.models.TranslationFavoritesEntity
-import com.example.translator.domain.models.TranslationHistoryEntity
+import com.example.translator.data.Room.entities.TranslationFavoritesEntity
+import com.example.translator.data.Room.entities.TranslationHistoryEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao

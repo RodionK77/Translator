@@ -2,9 +2,9 @@ package com.example.translator.data
 
 import com.example.translator.data.Room.TranslationsDatabase
 import com.example.translator.domain.TranslationsRepository
-import com.example.translator.domain.models.TranslationFavoritesEntity
-import com.example.translator.domain.models.TranslationHistoryEntity
+import com.example.translator.domain.models.WordItem
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -17,12 +17,16 @@ class TranslationsRepositoryImpl @Inject constructor(database: TranslationsDatab
         dao.deleteTranslationFromHistoryById(id)
     }
 
-    override fun getAllHistory(): Flow<List<TranslationHistoryEntity>> {
-        return dao.getAllHistory()
+    override fun getAllHistory(): Flow<List<WordItem>> {
+        val history = dao.getAllHistory()
+            .map { entities ->
+                entities.map { it.toDomain() }
+            }
+        return history
     }
 
-    override suspend fun saveTranslationToHistory(item: TranslationHistoryEntity) {
-        dao.saveTranslationToHistory(item)
+    override suspend fun saveTranslationToHistory(item: WordItem) {
+        dao.saveTranslationToHistory(item.toHistoryEntity())
     }
 
 
@@ -30,12 +34,16 @@ class TranslationsRepositoryImpl @Inject constructor(database: TranslationsDatab
         dao.deleteTranslationFromFavoritesById(id)
     }
 
-    override fun getAllFavorites(): Flow<List<TranslationFavoritesEntity>> {
-        return dao.getAllFavorites()
+    override fun getAllFavorites(): Flow<List<WordItem>> {
+        val favorites = dao.getAllFavorites()
+            .map { entities ->
+                entities.map { it.toDomain() }
+            }
+        return favorites
     }
 
-    override suspend fun saveTranslationToFavorites(item: TranslationFavoritesEntity) {
-        dao.saveTranslationToFavorites(item)
+    override suspend fun saveTranslationToFavorites(item: WordItem) {
+        dao.saveTranslationToFavorites(item.toFavoritesEntity())
     }
 
 }

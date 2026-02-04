@@ -27,14 +27,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.translator.R
-import com.example.translator.domain.models.TranslationEntity
-import com.example.translator.domain.models.TranslationFavoritesEntity
-import com.example.translator.domain.models.TranslationHistoryEntity
+import com.example.translator.domain.models.WordItem
 
 @Composable
-fun <T : TranslationEntity> ListItem(
-    item: T,
+fun ListItem(
+    item: WordItem,
     index: Int,
+    fromHistory: Boolean,
     isFavorite: Boolean,
     onDeleteFromHistory: (() -> Unit)? = null,
     onAddToFavorites: (() -> Unit)? = null,
@@ -63,10 +62,12 @@ fun <T : TranslationEntity> ListItem(
             defaultElevation = if (showMenu) 8.dp else 1.dp
         ),
         colors = CardDefaults.cardColors(
-            containerColor = if(item is TranslationHistoryEntity){
+            containerColor = if(!fromHistory){
+                MaterialTheme.colorScheme.primary
+            } else {
                 if (index == 0) MaterialTheme.colorScheme.primaryContainer
                 else MaterialTheme.colorScheme.surfaceVariant
-            } else MaterialTheme.colorScheme.primary
+            }
         )
     ) {
 
@@ -77,13 +78,13 @@ fun <T : TranslationEntity> ListItem(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "${item.englishWord} ➞ ${item.russianWord}",
+                text = "${item.text} ➞ ${item.translation}",
                 modifier = Modifier.weight(1f),
                 fontWeight =
-                if(item is TranslationFavoritesEntity) FontWeight.Bold else FontWeight.Normal
+                if(isFavorite && !fromHistory) FontWeight.Bold else FontWeight.Normal
             )
 
-            if (item is TranslationHistoryEntity && isFavorite) {
+            if (isFavorite && fromHistory) {
                 Icon(
                     imageVector = Icons.Default.Favorite,
                     contentDescription = stringResource(R.string.favorites),
@@ -96,7 +97,7 @@ fun <T : TranslationEntity> ListItem(
             expanded = showMenu,
             onDismissRequest = { showMenu = false }
         ) {
-            if (item is TranslationHistoryEntity) {
+            if (fromHistory) {
                 DropdownMenuItem(
                     text = { Text(stringResource(R.string.delete_from_history)) },
                     onClick = {

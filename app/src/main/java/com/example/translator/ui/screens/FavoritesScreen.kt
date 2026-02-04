@@ -45,6 +45,7 @@ fun FavoritesScreen(
                 ListItem(
                     item = item,
                     index = index,
+                    fromHistory = false,
                     isFavorite = uiState.favorites.any { it.id == item.id },
                     onDeleteFromFavorites = {
                         favoritesViewModel.deleteTranslationFromFavorites(item.id)

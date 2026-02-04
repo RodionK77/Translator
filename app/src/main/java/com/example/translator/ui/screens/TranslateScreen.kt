@@ -34,7 +34,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.translator.R
-import com.example.translator.domain.models.TranslationFavoritesEntity
 import com.example.translator.ui.viewmodels.TranslateViewModel
 
 @Composable
@@ -83,7 +82,7 @@ fun TranslateScreen(
                 modifier = Modifier.weight(1f),
                 fontSize = 16.sp,
 
-                text = uiState.translate?.russianWord
+                text = uiState.translate?.translation
                     ?: stringResource(R.string.translation)
             )
         }
@@ -130,16 +129,13 @@ fun TranslateScreen(
                 ListItem(
                     item = item,
                     index = index,
+                    fromHistory = true,
                     isFavorite = uiState.favorites.any { it.id == item.id },
                     onDeleteFromHistory = {
                         translateViewModel.deleteTranslationFromHistory(item.id)
                     },
                     onAddToFavorites = { translateViewModel.saveTranslationToFavorites(
-                        TranslationFavoritesEntity(
-                            id = item.id,
-                            englishWord = item.englishWord,
-                            russianWord = item.russianWord
-                        )
+                        item
                     ) },
                     onDeleteFromFavorites = {
                         translateViewModel.deleteTranslationFromFavorites(item.id)

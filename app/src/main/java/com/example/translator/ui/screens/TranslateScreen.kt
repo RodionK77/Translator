@@ -47,7 +47,7 @@ fun TranslateScreen(
     if(uiState.error != null){
         Toast.makeText(LocalContext.current,
             "${stringResource(R.string.error)}: " +
-                    "${uiState.error}", Toast.LENGTH_SHORT ).show()
+                    uiState.error!!.asString(), Toast.LENGTH_SHORT ).show()
         translateViewModel.clearError()
     }
 

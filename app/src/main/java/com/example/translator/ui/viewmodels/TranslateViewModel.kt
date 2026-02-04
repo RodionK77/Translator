@@ -14,7 +14,6 @@ import com.example.translator.domain.useCases.GetAllHistoryUseCase
 import com.example.translator.domain.useCases.GetMeaningsUseCase
 import com.example.translator.domain.useCases.SaveTranslationToFavoritesUseCase
 import com.example.translator.domain.useCases.SaveTranslationToHistoryUseCase
-import com.example.translator.ui.resources.ResourceProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -27,7 +26,7 @@ import javax.inject.Inject
 data class TranslateUiState(
     val meanings: List<Meanings> = listOf(),
     val isLoading: Boolean = false,
-    val error: String? = null,
+    val error: UiText? = null,
     val translate: TranslationHistoryEntity? = null,
     val history: List<TranslationHistoryEntity> = emptyList(),
     val favorites: List<TranslationFavoritesEntity> = emptyList()
@@ -42,7 +41,6 @@ class TranslateViewModel @Inject constructor (
     private val deleteTranslationFromHistoryByIdUseCase: DeleteTranslationFromHistoryByIdUseCase,
     private val getAllFavoritesUseCase: GetAllFavoritesUseCase,
     private val deleteTranslationFromFavoritesByIdUseCase: DeleteTranslationFromFavoritesByIdUseCase,
-    private val resourceProvider: ResourceProvider
 ) : ViewModel(){
 
 
@@ -65,7 +63,11 @@ class TranslateViewModel @Inject constructor (
         viewModelScope.launch {
             getAllHistoryUseCase()
                 .catch { e ->
-                    _uiState.update { it.copy(error = e.message) }
+                    _uiState.update {
+                        it.copy(
+                            error = UiText.DynamicString(e.message ?: "")
+                        )
+                    }
                     Log.d("R", "История не загрузилась ${e.message}")
                 }
                 .collect { history ->
@@ -78,7 +80,11 @@ class TranslateViewModel @Inject constructor (
         viewModelScope.launch {
             getAllFavoritesUseCase()
                 .catch { e ->
-                    _uiState.update { it.copy(error = e.message) }
+                    _uiState.update {
+                        it.copy(
+                            error = UiText.DynamicString(e.message ?: "")
+                        )
+                    }
                     Log.d("R", "Избранное не загрузилось ${e.message}")
                 }
                 .collect { favorites ->
@@ -91,25 +97,27 @@ class TranslateViewModel @Inject constructor (
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
             kotlin.runCatching { getMeaningsUseCase(search) }
-                .onSuccess {
-                    if(it.isNotEmpty()){
+                .onSuccess { meaning ->
+                    if(meaning.isNotEmpty()){
                         val entity = TranslationHistoryEntity(
                             englishWord = search,
-                            russianWord = it[0].meanings[0].translation?.text?:"")
+                            russianWord = meaning[0].meanings[0].translation?.text?:"")
 
                         _uiState.update { it.copy(isLoading = false, translate = entity) }
 
-                        Log.d("R", "Перевод: ${it[0].meanings[0].translation?.text}")
+                        Log.d("R", "Перевод: ${meaning[0].meanings[0].translation?.text}")
                         saveTranslationToHistory(entity)
                     } else {
-                        _uiState.update { it.copy(isLoading = false, error = resourceProvider.getString(R.string.translate_not_found)) }
+                        _uiState.update { it.copy(isLoading = false, error = UiText.StringResource(R.string.translate_not_found)) }
                         Log.d("R", "Перевод найти не удалось")
                     }
                 }
                 .onFailure { e ->
                     _uiState.update {
-                        it.copy(isLoading = false, error = "${resourceProvider.getString
-                        (R.string.translate_not_received)}\n${e.message}")
+                        it.copy(isLoading = false, error = UiText.StringResource(
+                            R.string.translate_not_received,
+                            e.message ?: "Unknown error"
+                        ))
                     }
 
                     Log.d("R", "Перевод получить не удалось: ${e.message}")
@@ -124,7 +132,10 @@ class TranslateViewModel @Inject constructor (
             }
             .onFailure { e ->
                 _uiState.update {
-                    it.copy(error = "${resourceProvider.getString(R.string.not_save_to_history)}\n${e.message}")
+                    it.copy(error = UiText.StringResource(
+                        R.string.translate_not_received,
+                        e.message ?: "Unknown error"
+                    ))
                 }
                 Log.d("R", "Не удалось сохранить в историю\n${e.message}")
             }
@@ -142,9 +153,10 @@ class TranslateViewModel @Inject constructor (
                     _uiState.update {
                         it.copy(
                             isLoading = false,
-                            error = "${
-                                resourceProvider.getString(R.string.not_delete_from_history)
-                            }\n${e.message}"
+                            error = UiText.StringResource(
+                                R.string.not_delete_from_history,
+                                e.message ?: ""
+                            )
                         )
                     }
                     Log.d("R", "Не удалось удалить из истории: ${e.message}")
@@ -160,8 +172,14 @@ class TranslateViewModel @Inject constructor (
                     Log.d("R", "Перевод сохранен в избранное")
                 }
                 .onFailure { e ->
-                    _uiState.update { it.copy(isLoading = false, error = "${resourceProvider.getString
-                        (R.string.not_save_to_favorites)}\n${e.message}") }
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false, error = UiText.StringResource(
+                                R.string.not_save_to_favorites,
+                                e.message ?: ""
+                            )
+                        )
+                    }
                     Log.d("R", "Не удалось сохранить в избранное\n${e.message}")
                 }
         }
@@ -176,8 +194,14 @@ class TranslateViewModel @Inject constructor (
                     Log.d("R", "Запись с id=$id удалена из избранного")
                 }
                 .onFailure { e ->
-                    _uiState.update { it.copy(isLoading = false, error = "${resourceProvider.getString
-                        (R.string.not_delete_from_favorites)}\n${e.message}") }
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false, error = UiText.StringResource(
+                                R.string.not_delete_from_favorites,
+                                e.message ?: ""
+                            )
+                        )
+                    }
                     Log.d("R", "Не удалось удалить из избранного\n${e.message}")
                 }
         }

@@ -7,7 +7,6 @@ import com.example.translator.R
 import com.example.translator.domain.models.TranslationFavoritesEntity
 import com.example.translator.domain.useCases.DeleteTranslationFromFavoritesByIdUseCase
 import com.example.translator.domain.useCases.GetAllFavoritesUseCase
-import com.example.translator.ui.resources.ResourceProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -19,7 +18,7 @@ import javax.inject.Inject
 
 data class FavoritesUiState(
     val isLoading: Boolean = false,
-    val error: String? = null,
+    val error: UiText? = null,
     val favorites: List<TranslationFavoritesEntity> = emptyList()
 )
 
@@ -27,7 +26,6 @@ data class FavoritesUiState(
 class FavoritesViewModel @Inject constructor (
     private val getAllFavoritesUseCase: GetAllFavoritesUseCase,
     private val deleteTranslationFromFavoritesByIdUseCase: DeleteTranslationFromFavoritesByIdUseCase,
-    private val resourceProvider: ResourceProvider
 ) : ViewModel(){
 
 
@@ -48,7 +46,7 @@ class FavoritesViewModel @Inject constructor (
         viewModelScope.launch {
             getAllFavoritesUseCase()
                 .catch { e ->
-                    _uiState.update { it.copy(error = e.message) }
+                    _uiState.update { it.copy(error = UiText.DynamicString(e.message ?: "")) }
                     Log.d("R", "Избранное не загрузилось ${e.message}")
                 }
                 .collect { favorites ->
@@ -66,8 +64,10 @@ class FavoritesViewModel @Inject constructor (
                     Log.d("R", "Запись с id=$id удалена из избранного")
                 }
                 .onFailure { e ->
-                    _uiState.update { it.copy(isLoading = false, error = "${resourceProvider.getString
-                        (R.string.not_delete_from_favorites)}\n${e.message}") }
+                    _uiState.update { it.copy(isLoading = false, error = UiText.StringResource(
+                        R.string.not_delete_from_favorites,
+                        e.message ?: ""
+                    )) }
 
                     Log.d("R", "Не удалось удалить из избранного\n${e.message}")
                 }

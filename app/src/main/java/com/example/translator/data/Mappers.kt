@@ -1,7 +1,6 @@
 package com.example.translator.data
 
-import com.example.translator.data.Room.entities.TranslationFavoritesEntity
-import com.example.translator.data.Room.entities.TranslationHistoryEntity
+import com.example.translator.data.Room.entities.Entity
 import com.example.translator.data.dto.Response
 import com.example.translator.domain.models.WordItem
 
@@ -16,36 +15,25 @@ fun Response.toDomain(): WordItem? {
     )
 }
 
-fun TranslationHistoryEntity.toDomain(): WordItem {
+
+fun Entity.toDomain(): WordItem {
     return WordItem(
         id = this.id,
         text = this.englishWord,
         translation = this.russianWord,
-        isFavorite = false
+        isFavorite = this.isFavorite,
+        isHistory = this.isHistory
     )
 }
 
-fun WordItem.toHistoryEntity(): TranslationHistoryEntity {
-    return TranslationHistoryEntity(
-        id = 0,
+fun WordItem.toEntity(
+    forceHistory: Boolean? = null,
+    forceFavorite: Boolean? = null
+): Entity {
+    return Entity(
         englishWord = this.text,
         russianWord = this.translation,
-    )
-}
-
-fun TranslationFavoritesEntity.toDomain(): WordItem {
-    return WordItem(
-        id = this.id,
-        text = this.englishWord,
-        translation = this.russianWord,
-        isFavorite = true
-    )
-}
-
-fun WordItem.toFavoritesEntity(): TranslationFavoritesEntity {
-    return TranslationFavoritesEntity(
-        id = this.id,
-        englishWord = this.text,
-        russianWord = this.translation
+        isFavorite = forceFavorite ?: this.isFavorite,
+        isHistory = forceHistory ?: this.isHistory
     )
 }

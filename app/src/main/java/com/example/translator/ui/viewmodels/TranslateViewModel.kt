@@ -5,19 +5,17 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.translator.R
 import com.example.translator.domain.models.WordItem
-import com.example.translator.domain.useCases.DeleteTranslationFromFavoritesByIdUseCase
-import com.example.translator.domain.useCases.DeleteTranslationFromHistoryByIdUseCase
-import com.example.translator.domain.useCases.GetAllFavoritesUseCase
-import com.example.translator.domain.useCases.GetAllHistoryUseCase
 import com.example.translator.domain.useCases.GetMeaningsUseCase
-import com.example.translator.domain.useCases.SaveTranslationToFavoritesUseCase
-import com.example.translator.domain.useCases.SaveTranslationToHistoryUseCase
+import com.example.translator.domain.useCases.GetAllEntitiesUseCase
+import com.example.translator.domain.useCases.RemoveEntityFromFavoritesByIdUseCase
+import com.example.translator.domain.useCases.RemoveEntityFromHistoryByIdUseCase
+import com.example.translator.domain.useCases.SaveEntityToFavoritesByIdUseCase
+import com.example.translator.domain.useCases.SaveEntityToHistoryUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -32,13 +30,12 @@ data class TranslateUiState(
 
 @HiltViewModel
 class TranslateViewModel @Inject constructor (
-    private val saveTranslationToHistoryUseCase: SaveTranslationToHistoryUseCase,
-    private val saveTranslationToFavoritesUseCase: SaveTranslationToFavoritesUseCase,
-    private val getAllHistoryUseCase: GetAllHistoryUseCase,
     private val getMeaningsUseCase: GetMeaningsUseCase,
-    private val deleteTranslationFromHistoryByIdUseCase: DeleteTranslationFromHistoryByIdUseCase,
-    private val getAllFavoritesUseCase: GetAllFavoritesUseCase,
-    private val deleteTranslationFromFavoritesByIdUseCase: DeleteTranslationFromFavoritesByIdUseCase,
+    private val saveEntityToHistoryUseCase: SaveEntityToHistoryUseCase,
+    private val saveEntityToFavoritesByIdUseCase: SaveEntityToFavoritesByIdUseCase,
+    private val getAllEntitiesUseCase: GetAllEntitiesUseCase,
+    private val removeEntityFromHistoryByIdUseCase: RemoveEntityFromHistoryByIdUseCase,
+    private val removeEntityFromFavoritesByIdUseCase: RemoveEntityFromFavoritesByIdUseCase
 ) : ViewModel(){
 
 
@@ -58,7 +55,7 @@ class TranslateViewModel @Inject constructor (
     }
 
     private fun observeData() {
-        viewModelScope.launch {
+        /*viewModelScope.launch {
             val historyFlow = getAllHistoryUseCase()
             val favoritesFlow = getAllFavoritesUseCase()
 
@@ -86,6 +83,24 @@ class TranslateViewModel @Inject constructor (
                         )
                     }
                 }
+        }*/
+
+        viewModelScope.launch {
+            getAllEntitiesUseCase()
+                .catch { e ->
+                    _uiState.update {
+                        it.copy(error = UiText.DynamicString(e.message ?: ""))
+                    }
+                    Log.d("R", "История не загрузилась: ${e.message}")
+                }
+                .collect { history ->
+                    _uiState.update {
+                        it.copy(
+                            history = history,
+                            isLoading = false
+                        )
+                    }
+                }
         }
     }
 
@@ -100,6 +115,7 @@ class TranslateViewModel @Inject constructor (
                         _uiState.update { it.copy(isLoading = false, translate = meaning) }
 
                         Log.d("R", "Перевод: ${meaning.translation}")
+
                         saveTranslationToHistory(meaning)
                     } else {
                         _uiState.update { it.copy(isLoading = false, error = UiText.StringResource(R.string.translate_not_found)) }
@@ -120,7 +136,7 @@ class TranslateViewModel @Inject constructor (
     }
 
     private suspend fun saveTranslationToHistory(item: WordItem){
-        kotlin.runCatching { saveTranslationToHistoryUseCase(item) }
+        kotlin.runCatching { saveEntityToHistoryUseCase(item) }
             .onSuccess {
                 Log.d("R", "Перевод сохранен в историю")
             }
@@ -138,7 +154,7 @@ class TranslateViewModel @Inject constructor (
     fun deleteTranslationFromHistory(id: Int) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
-            kotlin.runCatching { deleteTranslationFromHistoryByIdUseCase(id) }
+            kotlin.runCatching { removeEntityFromHistoryByIdUseCase(id) }
                 .onSuccess {
                     _uiState.update { it.copy(isLoading = false) }
                     Log.d("R", "Запись с id=$id удалена из истории")
@@ -160,7 +176,7 @@ class TranslateViewModel @Inject constructor (
 
     fun saveTranslationToFavorites(item: WordItem){
         viewModelScope.launch {
-            kotlin.runCatching { saveTranslationToFavoritesUseCase(item) }
+            kotlin.runCatching { saveEntityToFavoritesByIdUseCase(item.id) }
                 .onSuccess {
                     _uiState.update { it.copy(isLoading = false) }
                     Log.d("R", "Перевод сохранен в избранное")
@@ -182,7 +198,7 @@ class TranslateViewModel @Inject constructor (
     fun deleteTranslationFromFavorites(id: Int) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
-            kotlin.runCatching { deleteTranslationFromFavoritesByIdUseCase(id) }
+            kotlin.runCatching { removeEntityFromFavoritesByIdUseCase(id) }
                 .onSuccess {
                     _uiState.update { it.copy(isLoading = false) }
                     Log.d("R", "Запись с id=$id удалена из избранного")

@@ -4,5 +4,6 @@ data class WordItem(
     val id: Int = 0,
     val text: String,
     val translation: String,
-    val isFavorite: Boolean = false
+    val isFavorite: Boolean = false,
+    val isHistory: Boolean = true
 )

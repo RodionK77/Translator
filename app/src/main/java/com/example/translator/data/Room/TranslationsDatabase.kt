@@ -2,11 +2,10 @@ package com.example.translator.data.Room
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
-import com.example.translator.data.Room.entities.TranslationFavoritesEntity
-import com.example.translator.data.Room.entities.TranslationHistoryEntity
+import com.example.translator.data.Room.entities.Entity
 
 @Database(
-    entities = [TranslationHistoryEntity::class, TranslationFavoritesEntity::class],
+    entities = [Entity::class],
     version = 1,
     exportSchema = false
 )

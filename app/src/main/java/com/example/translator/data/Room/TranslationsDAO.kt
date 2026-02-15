@@ -4,31 +4,34 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import com.example.translator.data.Room.entities.TranslationFavoritesEntity
-import com.example.translator.data.Room.entities.TranslationHistoryEntity
+import com.example.translator.data.Room.entities.Entity
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface TranslationsDAO {
 
+    @Query("SELECT * FROM translation_entity WHERE is_history = 1 ORDER BY id DESC")
+    fun getAllEntities(): Flow<List<Entity>>
 
-    @Query("DELETE FROM translation_history WHERE id = :id")
-    suspend fun deleteTranslationFromHistoryById(id: Int)
+    @Query("SELECT * FROM translation_entity WHERE is_favorite = 1")
+    fun getFavoritesEntities(): Flow<List<Entity>>
 
-    @Query("SELECT * FROM translation_history ORDER BY id DESC")
-    fun getAllHistory(): Flow<List<TranslationHistoryEntity>>
+    @Query("UPDATE translation_entity SET is_favorite = 0 WHERE id = :id")
+    suspend fun removeEntityFromFavoritesById(id: Int)
 
-    @Insert(entity = TranslationHistoryEntity::class, onConflict = OnConflictStrategy.REPLACE)
-    suspend fun saveTranslationToHistory(item: TranslationHistoryEntity)
+    @Query("UPDATE translation_entity SET is_history = 0 WHERE id = :id")
+    suspend fun removeEntityFromHistoryById(id: Int)
 
+    @Insert(entity = Entity::class, onConflict = OnConflictStrategy.REPLACE)
+    suspend fun saveEntityToHistory(item: Entity)
 
-    @Query("DELETE FROM translation_favorites WHERE id = :id")
-    suspend fun deleteTranslationFromFavoritesById(id: Int)
+    @Query("UPDATE translation_entity SET is_favorite = 1 WHERE id = :id")
+    suspend fun saveEntityToFavoritesById(id: Int)
 
-    @Query("SELECT * FROM translation_favorites")
-    fun getAllFavorites(): Flow<List<TranslationFavoritesEntity>>
+    @Query("DELETE FROM translation_entity WHERE id = :id")
+    suspend fun deleteEntityById(id: Int)
 
-    @Insert(entity = TranslationFavoritesEntity::class, onConflict = OnConflictStrategy.REPLACE)
-    suspend fun saveTranslationToFavorites(item: TranslationFavoritesEntity)
+    @Query("DELETE FROM translation_entity WHERE is_history = 0 AND is_favorite = 0")
+    suspend fun deleteOrphans()
 
 }

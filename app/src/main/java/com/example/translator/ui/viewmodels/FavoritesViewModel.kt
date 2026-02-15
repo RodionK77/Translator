@@ -5,8 +5,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.translator.R
 import com.example.translator.domain.models.WordItem
-import com.example.translator.domain.useCases.DeleteTranslationFromFavoritesByIdUseCase
-import com.example.translator.domain.useCases.GetAllFavoritesUseCase
+import com.example.translator.domain.useCases.GetFavoritesEntitiesUseCase
+import com.example.translator.domain.useCases.RemoveEntityFromFavoritesByIdUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -24,8 +24,8 @@ data class FavoritesUiState(
 
 @HiltViewModel
 class FavoritesViewModel @Inject constructor (
-    private val getAllFavoritesUseCase: GetAllFavoritesUseCase,
-    private val deleteTranslationFromFavoritesByIdUseCase: DeleteTranslationFromFavoritesByIdUseCase,
+    private val getFavoritesEntitiesUseCase: GetFavoritesEntitiesUseCase,
+    private val removeEntityFromFavoritesByIdUseCase: RemoveEntityFromFavoritesByIdUseCase
 ) : ViewModel(){
 
 
@@ -44,7 +44,7 @@ class FavoritesViewModel @Inject constructor (
 
     private fun observeFavorites() {
         viewModelScope.launch {
-            getAllFavoritesUseCase()
+            getFavoritesEntitiesUseCase()
                 .catch { e ->
                     _uiState.update { it.copy(error = UiText.DynamicString(e.message ?: "")) }
                     Log.d("R", "Избранное не загрузилось ${e.message}")
@@ -58,7 +58,7 @@ class FavoritesViewModel @Inject constructor (
     fun deleteTranslationFromFavorites(id: Int) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
-            kotlin.runCatching { deleteTranslationFromFavoritesByIdUseCase(id) }
+            kotlin.runCatching { removeEntityFromFavoritesByIdUseCase(id) }
                 .onSuccess {
                     _uiState.update { it.copy(isLoading = false) }
                     Log.d("R", "Запись с id=$id удалена из избранного")

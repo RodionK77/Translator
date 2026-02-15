@@ -1,14 +1,13 @@
 package com.example.translator.domain.useCases
 
-import com.example.translator.domain.TranslationsRepository
+import com.example.translator.domain.EntityRepository
 import com.example.translator.domain.models.WordItem
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
-class GetAllHistoryUseCase @Inject constructor(private val repository: TranslationsRepository) {
+class GetFavoritesEntitiesUseCase @Inject constructor(private val repository: EntityRepository) {
 
     operator fun invoke(): Flow<List<WordItem>> {
-        return repository.getAllHistory()
+        return repository.getFavoritesEntities()
     }
-
 }
